@@ -3,16 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resultados – CNU2</title>
+<title>Resultados – Concurso</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
+body { margin:0; font-family: Arial, sans-serif; background:#f4f6f8; }
 
 /* ===== HEADER ===== */
 header {
@@ -50,7 +46,7 @@ header button:disabled {
 
 /* ===== MAIN ===== */
 main {
-  padding: 110px 10px 90px 10px; /* espaço p/ header + footer */
+  padding: 110px 10px 90px 10px;
 }
 
 #info {
@@ -75,13 +71,11 @@ th {
   position: sticky;
   top: 0;
   background: #e9ecef;
-  z-index: 1;
 }
 
 td, th {
   border: 1px solid #ccc;
   padding: 6px;
-  text-align: left;
 }
 
 /* ===== FOOTER ===== */
@@ -118,15 +112,15 @@ footer a {
 <body>
 
 <header>
-  <h3>Resultados – CNU2</h3>
+  <h3>Resultados do Concurso</h3>
 
   <div class="linha">
-    <select id="fCodigo" onchange="atualizarCargos()">
-      <option value="">CÓDIGO</option>
+    <select id="fCargo" onchange="atualizarBlocos()">
+      <option value="">CARGO</option>
     </select>
 
-    <select id="fCargo" onchange="atualizarEspecialidades()" disabled>
-      <option value="">CARGO</option>
+    <select id="fBloco" onchange="atualizarEspecialidades()" disabled>
+      <option value="">BLOCO</option>
     </select>
 
     <select id="fEspecialidade" onchange="verificarFiltros()" disabled>
@@ -155,7 +149,7 @@ footer a {
 </main>
 
 <footer>
-  💙 Sua doação mantém o projeto ativo. Qualquer valor faz diferença!  
+  💙 Sua doação mantém o projeto ativo  
   <br>
   <button onclick="copiarPix()">Copiar Pix</button>
   <br>
@@ -168,7 +162,7 @@ footer a {
 let dados = [];
 let filtradosBase = [];
 
-/* === NORMALIZA TEXTO (remove acento e maiúsculas) === */
+/* === NORMALIZA TEXTO === */
 function normalizar(txt) {
   return txt?.toString()
     .normalize("NFD")
@@ -183,49 +177,49 @@ Papa.parse("dados_concurso.csv", {
   skipEmptyLines: true,
   complete: r => {
     dados = r.data;
-    preencherCodigos();
+    preencherCargos();
   }
 });
 
-/* === FILTROS DINÂMICOS === */
-function preencherCodigos() {
-  const sel = document.getElementById("fCodigo");
-  [...new Set(dados.map(d => d.CODIGO).filter(Boolean))]
+/* === FILTROS EM CASCATA (CARGO → BLOCO → ESPECIALIDADE) === */
+function preencherCargos() {
+  const sel = document.getElementById("fCargo");
+  [...new Set(dados.map(d => d.CARGO).filter(Boolean))]
     .sort()
     .forEach(v => sel.add(new Option(v, v)));
 }
 
-function atualizarCargos() {
-  const codigo = fCodigo.value;
+function atualizarBlocos() {
+  const cargo = fCargo.value;
 
-  fCargo.innerHTML = '<option value="">CARGO</option>';
+  fBloco.innerHTML = '<option value="">BLOCO</option>';
   fEspecialidade.innerHTML = '<option value="">ESPECIALIDADE</option>';
-  fCargo.disabled = true;
+  fBloco.disabled = true;
   fEspecialidade.disabled = true;
   verificarFiltros();
 
-  if (!codigo) return;
+  if (!cargo) return;
 
-  const subset = dados.filter(d => d.CODIGO === codigo);
-  [...new Set(subset.map(d => d.CARGO).filter(Boolean))]
+  const subset = dados.filter(d => d.CARGO === cargo);
+  [...new Set(subset.map(d => d.BLOCO).filter(Boolean))]
     .sort()
-    .forEach(v => fCargo.add(new Option(v, v)));
+    .forEach(v => fBloco.add(new Option(v, v)));
 
-  fCargo.disabled = false;
+  fBloco.disabled = false;
 }
 
 function atualizarEspecialidades() {
-  const codigo = fCodigo.value;
   const cargo = fCargo.value;
+  const bloco = fBloco.value;
 
   fEspecialidade.innerHTML = '<option value="">ESPECIALIDADE</option>';
   fEspecialidade.disabled = true;
   verificarFiltros();
 
-  if (!codigo || !cargo) return;
+  if (!cargo || !bloco) return;
 
   const subset = dados.filter(d =>
-    d.CODIGO === codigo && d.CARGO === cargo
+    d.CARGO === cargo && d.BLOCO === bloco
   );
 
   [...new Set(subset.map(d => d.ESPECIALIDADE).filter(Boolean))]
@@ -236,19 +230,19 @@ function atualizarEspecialidades() {
 }
 
 function verificarFiltros() {
-  btnVer.disabled = !(fCodigo.value && fCargo.value && fEspecialidade.value);
+  btnVer.disabled = !(fCargo.value && fBloco.value && fEspecialidade.value);
 }
 
-/* === VER RESULTADOS === */
+/* === RESULTADOS === */
 function verResultado() {
-  if (!(fCodigo.value && fCargo.value && fEspecialidade.value)) {
-    alert("Selecione Código, Cargo e Especialidade.");
+  if (!(fCargo.value && fBloco.value && fEspecialidade.value)) {
+    alert("Selecione Cargo, Bloco e Especialidade.");
     return;
   }
 
   filtradosBase = dados.filter(d =>
-    d.CODIGO === fCodigo.value &&
     d.CARGO === fCargo.value &&
+    d.BLOCO === fBloco.value &&
     d.ESPECIALIDADE === fEspecialidade.value
   );
 
@@ -266,7 +260,7 @@ fNome.addEventListener("input", () => {
   );
 });
 
-/* === RENDERIZA TABELA === */
+/* === TABELA === */
 function render(lista) {
   if (!lista.length) {
     tbody.innerHTML = "";
@@ -285,7 +279,7 @@ function render(lista) {
   info.innerText = `${lista.length} registros encontrados.`;
 }
 
-/* === COPIAR PIX === */
+/* === PIX === */
 function copiarPix() {
   navigator.clipboard.writeText("35992424677");
   alert("Chave Pix copiada!");
