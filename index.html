@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<!-- Google tag (gtag.js) -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultado Preliminar CNU2 – Extraoficial</title>
+
+<!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-L04YT2TFYP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-L04YT2TFYP');
 </script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resultados – Concurso</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
-body { margin:0; font-family: Arial, sans-serif; background:#f4f6f8; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
 
 /* ===== HEADER ===== */
 header {
@@ -26,12 +30,12 @@ header {
   width: 100%;
   background: #0b3c6d;
   color: white;
-  padding: 6px 10px;
+  padding: 8px 10px;
   z-index: 1000;
 }
 
 header h3 {
-  margin: 4px 0;
+  margin: 4px 0 6px;
   font-size: 16px;
 }
 
@@ -44,7 +48,7 @@ header .linha {
 header select,
 header input,
 header button {
-  padding: 5px;
+  padding: 6px;
   font-size: 13px;
 }
 
@@ -55,17 +59,17 @@ header button:disabled {
 
 /* ===== MAIN ===== */
 main {
-  padding: 110px 10px 90px 10px;
+  padding: 120px 10px 110px;
 }
 
 #info {
-  margin-bottom: 6px;
   font-weight: bold;
+  margin-bottom: 6px;
 }
 
 .tabela-container {
-  overflow: auto;
   max-height: 65vh;
+  overflow: auto;
   background: white;
 }
 
@@ -95,15 +99,17 @@ td, th {
   background: #0b3c6d;
   color: white;
   padding: 8px 14px;
-  font-size: 12px;
   box-sizing: border-box;
-  text-align: center;
 }
 
-/* BLOCO CENTRAL (texto + botão) */
+.footer-pix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .pix-info {
-  display: inline-block;
-  line-height: 1.4;
+  text-align: center;
 }
 
 .pix-info button {
@@ -117,7 +123,7 @@ td, th {
   font-size: 13px;
 }
 
-/* QR CODE FIXO NO CANTO DIREITO */
+/* QR code desktop */
 .qr-pix {
   position: absolute;
   right: 14px;
@@ -126,8 +132,8 @@ td, th {
 }
 
 .qr-pix img {
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   background: white;
   padding: 4px;
   border-radius: 6px;
@@ -139,30 +145,61 @@ td, th {
   opacity: 0.9;
 }
 
+/* ===== MOBILE: LADO A LADO ===== */
+@media (max-width: 600px) {
+
+  .footer-pix {
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pix-info {
+    text-align: left;
+    font-size: 11px;
+    max-width: 60%;
+  }
+
+  .pix-info button {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .qr-pix {
+    position: static;
+    margin-left: auto;
+  }
+
+  .qr-pix img {
+    width: 70px;
+    height: 70px;
+  }
+
+  .qr-texto {
+    font-size: 9px;
+  }
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h3>RESULTADO PRELIMINAR CNU2 - EXTRAOFICIAL</h3>
+  <h3>RESULTADO PRELIMINAR CNU2 – EXTRAOFICIAL</h3>
 
   <div class="linha">
-    <select id="fCargo" onchange="atualizarBlocos()">
+    <select id="fCargo">
       <option value="">CARGO</option>
     </select>
 
-    <select id="fBloco" onchange="atualizarEspecialidades()" disabled>
+    <select id="fBloco" disabled>
       <option value="">BLOCO</option>
     </select>
 
-    <select id="fEspecialidade" onchange="verificarFiltros()" disabled>
+    <select id="fEspecialidade" disabled>
       <option value="">ESPECIALIDADE</option>
     </select>
 
-    <button id="btnVer" onclick="verResultado()" disabled>
-      Ver resultado
-    </button>
+    <button id="btnVer" disabled>Ver resultado</button>
   </div>
 
   <div class="linha">
@@ -198,7 +235,6 @@ td, th {
 let dados = [];
 let filtradosBase = [];
 
-/* === NORMALIZA TEXTO === */
 function normalizar(txt) {
   return txt?.toString()
     .normalize("NFD")
@@ -206,7 +242,6 @@ function normalizar(txt) {
     .toLowerCase();
 }
 
-/* === CARREGA CSV === */
 Papa.parse("dados_concurso.csv", {
   download: true,
   header: true,
@@ -217,65 +252,50 @@ Papa.parse("dados_concurso.csv", {
   }
 });
 
-/* === FILTROS EM CASCATA (CARGO → BLOCO → ESPECIALIDADE) === */
 function preencherCargos() {
-  const sel = document.getElementById("fCargo");
+  const sel = fCargo;
   [...new Set(dados.map(d => d.CARGO).filter(Boolean))]
     .sort()
     .forEach(v => sel.add(new Option(v, v)));
 }
 
-function atualizarBlocos() {
-  const cargo = fCargo.value;
-
+fCargo.onchange = () => {
   fBloco.innerHTML = '<option value="">BLOCO</option>';
   fEspecialidade.innerHTML = '<option value="">ESPECIALIDADE</option>';
   fBloco.disabled = true;
   fEspecialidade.disabled = true;
-  verificarFiltros();
+  btnVer.disabled = true;
 
-  if (!cargo) return;
+  if (!fCargo.value) return;
 
-  const subset = dados.filter(d => d.CARGO === cargo);
-  [...new Set(subset.map(d => d.BLOCO).filter(Boolean))]
+  [...new Set(dados.filter(d => d.CARGO === fCargo.value).map(d => d.BLOCO).filter(Boolean))]
     .sort()
     .forEach(v => fBloco.add(new Option(v, v)));
 
   fBloco.disabled = false;
-}
+};
 
-function atualizarEspecialidades() {
-  const cargo = fCargo.value;
-  const bloco = fBloco.value;
-
+fBloco.onchange = () => {
   fEspecialidade.innerHTML = '<option value="">ESPECIALIDADE</option>';
   fEspecialidade.disabled = true;
-  verificarFiltros();
+  btnVer.disabled = true;
 
-  if (!cargo || !bloco) return;
+  if (!fBloco.value) return;
 
-  const subset = dados.filter(d =>
-    d.CARGO === cargo && d.BLOCO === bloco
-  );
-
-  [...new Set(subset.map(d => d.ESPECIALIDADE).filter(Boolean))]
+  [...new Set(dados.filter(d =>
+    d.CARGO === fCargo.value && d.BLOCO === fBloco.value
+  ).map(d => d.ESPECIALIDADE).filter(Boolean))]
     .sort()
     .forEach(v => fEspecialidade.add(new Option(v, v)));
 
   fEspecialidade.disabled = false;
-}
+};
 
-function verificarFiltros() {
+fEspecialidade.onchange = () => {
   btnVer.disabled = !(fCargo.value && fBloco.value && fEspecialidade.value);
-}
+};
 
-/* === RESULTADOS === */
-function verResultado() {
-  if (!(fCargo.value && fBloco.value && fEspecialidade.value)) {
-    alert("Selecione Cargo, Bloco e Especialidade.");
-    return;
-  }
-
+btnVer.onclick = () => {
   filtradosBase = dados.filter(d =>
     d.CARGO === fCargo.value &&
     d.BLOCO === fBloco.value &&
@@ -284,19 +304,13 @@ function verResultado() {
 
   fNome.disabled = false;
   render(filtradosBase);
-}
+};
 
-/* === BUSCA POR NOME === */
 fNome.addEventListener("input", () => {
   const termo = normalizar(fNome.value);
-  render(
-    filtradosBase.filter(d =>
-      normalizar(d.NOME).includes(termo)
-    )
-  );
+  render(filtradosBase.filter(d => normalizar(d.NOME).includes(termo)));
 });
 
-/* === TABELA === */
 function render(lista) {
   if (!lista.length) {
     tbody.innerHTML = "";
@@ -305,8 +319,7 @@ function render(lista) {
   }
 
   const cols = Object.keys(lista[0]);
-  thead.innerHTML =
-    "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  thead.innerHTML = "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
 
   tbody.innerHTML = lista.map(l =>
     "<tr>" + cols.map(c => `<td>${l[c] ?? ""}</td>`).join("") + "</tr>"
@@ -315,7 +328,6 @@ function render(lista) {
   info.innerText = `${lista.length} registros encontrados.`;
 }
 
-/* === PIX === */
 function copiarPix() {
   navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
   alert("Chave Pix copiada!");
