@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultados – CNU2</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+
+/* ===== HEADER ===== */
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: #0b3c6d;
+  color: white;
+  padding: 6px 10px;
+  z-index: 1000;
+}
+
+header h3 {
+  margin: 4px 0;
+  font-size: 16px;
+}
+
+header .linha {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+header select,
+header input,
+header button {
+  padding: 5px;
+  font-size: 13px;
+}
+
+header button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== MAIN ===== */
+main {
+  padding: 110px 10px 90px 10px; /* espaço p/ header + footer */
+}
+
+#info {
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.tabela-container {
+  overflow: auto;
+  max-height: 65vh;
+  background: white;
+}
+
+/* ===== TABELA ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: #e9ecef;
+  z-index: 1;
+}
+
+td, th {
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: left;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #0b3c6d;
+  color: white;
+  text-align: center;
+  padding: 6px;
+  font-size: 12px;
+}
+
+footer button {
+  margin-top: 4px;
+  padding: 5px 12px;
+  background: #28a745;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+footer a {
+  display: inline-block;
+  margin-top: 4px;
+  color: #a8e6cf;
+  text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h3>Resultados – CNU2</h3>
+
+  <div class="linha">
+    <select id="fCodigo" onchange="atualizarCargos()">
+      <option value="">CÓDIGO</option>
+    </select>
+
+    <select id="fCargo" onchange="atualizarEspecialidades()" disabled>
+      <option value="">CARGO</option>
+    </select>
+
+    <select id="fEspecialidade" onchange="verificarFiltros()" disabled>
+      <option value="">ESPECIALIDADE</option>
+    </select>
+
+    <button id="btnVer" onclick="verResultado()" disabled>
+      Ver resultado
+    </button>
+  </div>
+
+  <div class="linha">
+    <input id="fNome" placeholder="Buscar nome" disabled>
+  </div>
+</header>
+
+<main>
+  <div id="info"></div>
+
+  <div class="tabela-container">
+    <table>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<footer>
+  💙 Sua doação mantém o projeto ativo. Qualquer valor faz diferença!  
+  <br>
+  <button onclick="copiarPix()">Copiar Pix</button>
+  <br>
+  <a href="https://wa.me/5535992424677" target="_blank">
+    💬 Dúvidas? WhatsApp
+  </a>
+</footer>
+
+<script>
+let dados = [];
+let filtradosBase = [];
+
+/* === NORMALIZA TEXTO (remove acento e maiúsculas) === */
+function normalizar(txt) {
+  return txt?.toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+/* === CARREGA CSV === */
+Papa.parse("dados_concurso.csv", {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: r => {
+    dados = r.data;
+    preencherCodigos();
+  }
+});
+
+/* === FILTROS DINÂMICOS === */
+function preencherCodigos() {
+  const sel = document.getElementById("fCodigo");
+  [...new Set(dados.map(d => d.CODIGO).filter(Boolean))]
+    .sort()
+    .forEach(v => sel.add(new Option(v, v)));
+}
+
+function atualizarCargos() {
+  const codigo = fCodigo.value;
+
+  fCargo.innerHTML = '<option value="">CARGO</option>';
+  fEspecialidade.innerHTML = '<option value="">ESPECIALIDADE</option>';
+  fCargo.disabled = true;
+  fEspecialidade.disabled = true;
+  verificarFiltros();
+
+  if (!codigo) return;
+
+  const subset = dados.filter(d => d.CODIGO === codigo);
+  [...new Set(subset.map(d => d.CARGO).filter(Boolean))]
+    .sort()
+    .forEach(v => fCargo.add(new Option(v, v)));
+
+  fCargo.disabled = false;
+}
+
+function atualizarEspecialidades() {
+  const codigo = fCodigo.value;
+  const cargo = fCargo.value;
+
+  fEspecialidade.innerHTML = '<option value="">ESPECIALIDADE</option>';
+  fEspecialidade.disabled = true;
+  verificarFiltros();
+
+  if (!codigo || !cargo) return;
+
+  const subset = dados.filter(d =>
+    d.CODIGO === codigo && d.CARGO === cargo
+  );
+
+  [...new Set(subset.map(d => d.ESPECIALIDADE).filter(Boolean))]
+    .sort()
+    .forEach(v => fEspecialidade.add(new Option(v, v)));
+
+  fEspecialidade.disabled = false;
+}
+
+function verificarFiltros() {
+  btnVer.disabled = !(fCodigo.value && fCargo.value && fEspecialidade.value);
+}
+
+/* === VER RESULTADOS === */
+function verResultado() {
+  if (!(fCodigo.value && fCargo.value && fEspecialidade.value)) {
+    alert("Selecione Código, Cargo e Especialidade.");
+    return;
+  }
+
+  filtradosBase = dados.filter(d =>
+    d.CODIGO === fCodigo.value &&
+    d.CARGO === fCargo.value &&
+    d.ESPECIALIDADE === fEspecialidade.value
+  );
+
+  fNome.disabled = false;
+  render(filtradosBase);
+}
+
+/* === BUSCA POR NOME === */
+fNome.addEventListener("input", () => {
+  const termo = normalizar(fNome.value);
+  render(
+    filtradosBase.filter(d =>
+      normalizar(d.NOME).includes(termo)
+    )
+  );
+});
+
+/* === RENDERIZA TABELA === */
+function render(lista) {
+  if (!lista.length) {
+    tbody.innerHTML = "";
+    info.innerText = "Nenhum resultado encontrado.";
+    return;
+  }
+
+  const cols = Object.keys(lista[0]);
+  thead.innerHTML =
+    "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+
+  tbody.innerHTML = lista.map(l =>
+    "<tr>" + cols.map(c => `<td>${l[c] ?? ""}</td>`).join("") + "</tr>"
+  ).join("");
+
+  info.innerText = `${lista.length} registros encontrados.`;
+}
+
+/* === COPIAR PIX === */
+function copiarPix() {
+  navigator.clipboard.writeText("35992424677");
+  alert("Chave Pix copiada!");
+}
+</script>
+
+</body>
+</html>
