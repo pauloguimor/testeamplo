@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-L04YT2TFYP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-L04YT2TFYP');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Resultados – Concurso</title>
@@ -79,40 +88,64 @@ td, th {
 }
 
 /* ===== FOOTER ===== */
-footer {
+.footer-pix {
   position: fixed;
   bottom: 0;
   width: 100%;
   background: #0b3c6d;
   color: white;
-  text-align: center;
-  padding: 6px;
+  padding: 8px 14px;
   font-size: 12px;
+  box-sizing: border-box;
+  text-align: center;
 }
 
-footer button {
+/* BLOCO CENTRAL (texto + botão) */
+.pix-info {
+  display: inline-block;
+  line-height: 1.4;
+}
+
+.pix-info button {
   margin-top: 4px;
-  padding: 5px 12px;
+  padding: 6px 16px;
   background: #28a745;
   border: none;
   color: white;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 13px;
 }
 
-footer a {
-  display: inline-block;
-  margin-top: 4px;
-  color: #a8e6cf;
-  text-decoration: none;
+/* QR CODE FIXO NO CANTO DIREITO */
+.qr-pix {
+  position: absolute;
+  right: 14px;
+  bottom: 6px;
+  text-align: center;
 }
+
+.qr-pix img {
+  width: 100px;
+  height: 100px;
+  background: white;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.qr-texto {
+  font-size: 10px;
+  margin-top: 2px;
+  opacity: 0.9;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-  <h3>Resultados do Concurso</h3>
+  <h3>RESULTADO PRELIMINAR CNU2 - EXTRAOFICIAL</h3>
 
   <div class="linha">
     <select id="fCargo" onchange="atualizarBlocos()">
@@ -148,14 +181,17 @@ footer a {
   </div>
 </main>
 
-<footer>
-  💙 Sua doação mantém o projeto ativo  
-  <br>
-  <button onclick="copiarPix()">Copiar Pix</button>
-  <br>
-  <a href="https://wa.me/5535992424677" target="_blank">
-    💬 Dúvidas? WhatsApp
-  </a>
+<footer class="footer-pix">
+  <div class="pix-info">
+    💙 Sua doação mantém o projeto ativo.<br>
+    <small>Qualquer valor faz diferença</small><br>
+    <button onclick="copiarPix()">Copiar Pix</button>
+  </div>
+
+  <div class="qr-pix">
+    <img src="qr-pix.png" alt="QR Code Pix">
+    <div class="qr-texto">Escaneie para doar via Pix</div>
+  </div>
 </footer>
 
 <script>
@@ -281,7 +317,7 @@ function render(lista) {
 
 /* === PIX === */
 function copiarPix() {
-  navigator.clipboard.writeText("35992424677");
+  navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
   alert("Chave Pix copiada!");
 }
 </script>
