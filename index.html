@@ -16,47 +16,79 @@
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8}
 
-/* ===== HEADER ===== */
+/* HEADER */
 header{position:fixed;top:0;width:100%;background:#0b3c6d;color:white;padding:8px 10px;z-index:1000}
 header h3{margin:4px 0 6px;font-size:16px}
 header .linha{display:flex;gap:6px;flex-wrap:wrap}
 header select,header input,header button{padding:6px;font-size:13px}
 header button:disabled{opacity:0.6;cursor:not-allowed}
 
-/* ===== MAIN ===== */
+/* MAIN */
 main{padding:120px 10px 110px}
 #info{font-weight:bold;margin-bottom:6px}
 .tabela-container{max-height:65vh;overflow:auto;background:white}
 
-/* ===== TABELA ===== */
+/* TABELA */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{position:sticky;top:0;background:#e9ecef}
 td,th{border:1px solid #ccc;padding:6px}
 
-/* ===== FOOTER ===== */
-.footer-pix{position:fixed;bottom:0;width:100%;background:#0b3c6d;color:white;padding:8px 14px;box-sizing:border-box}
-.footer-pix{display:flex;align-items:center;justify-content:center}
+/* FOOTER */
+.footer-pix{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#0b3c6d;
+  color:white;
+  padding:8px 14px;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 .pix-info{text-align:center}
-.pix-info button{margin-top:4px;padding:6px 16px;background:#28a745;border:none;color:white;border-radius:6px;cursor:pointer;font-size:13px}
+.pix-info button{
+  margin-top:4px;
+  padding:6px 16px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:13px;
+}
 
 /* QR */
-.qr-pix{position:absolute;right:14px;bottom:6px;text-align:center}
-.qr-pix img{width:110px;height:110px;background:white;padding:4px;border-radius:6px}
+.qr-pix{
+  position:absolute;
+  right:14px;
+  bottom:6px;
+  text-align:center
+}
+.qr-pix img{
+  width:110px;
+  height:110px;
+  background:white;
+  padding:4px;
+  border-radius:6px
+}
 .qr-texto{font-size:10px;margin-top:2px;opacity:0.9}
 
 /* MOBILE */
 @media (max-width:600px){
-.footer-pix{justify-content:space-between}
-.pix-info{font-size:11px;max-width:60%;text-align:left}
-.qr-pix{position:static;margin-left:auto}
-.qr-pix img{width:70px;height:70px}
-.qr-texto{font-size:9px}
+  .footer-pix{justify-content:space-between}
+  .pix-info{font-size:11px;max-width:60%;text-align:left}
+  .qr-pix{position:static;margin-left:auto}
+  .qr-pix img{width:70px;height:70px}
+  .qr-texto{font-size:9px}
 }
 
-/* ===== POP-UP (NOVO) ===== */
+/* POPUP */
 .popup-overlay{
   position:fixed;
   inset:0;
@@ -102,7 +134,7 @@ td,th{border:1px solid #ccc;padding:6px}
 </div>
 </header>
 
-<main>
+<main id="areaPDF">
 <div id="info"></div>
 <div class="tabela-container">
 <table>
@@ -116,15 +148,23 @@ td,th{border:1px solid #ccc;padding:6px}
 <div class="pix-info">
 💙 Este site foi criado de forma independente para ajudar candidatos.<br>
 <small>Se ele te ajudou, considere apoiar.</small><br>
-<button onclick="copiarPix()">Copiar Pix</button>
+
+<button onclick="copiarPix()" style="background:#28a745;color:#fff">
+Copiar Pix
+</button>
+
+<button onclick="exportarPDF()" style="background:#ffc107;color:#000;font-weight:bold">
+📄 Exportar PDF
+</button>
 </div>
+
 <div class="qr-pix">
 <img src="qr-pix.png">
 <div class="qr-texto">Escaneie para doar via Pix</div>
 </div>
 </footer>
 
-<!-- POP-UP -->
+<!-- POPUP -->
 <div id="popupPix" class="popup-overlay">
 <div class="popup-content">
 <p><strong>Este site é mantido de forma independente.</strong></p>
@@ -138,80 +178,99 @@ td,th{border:1px solid #ccc;padding:6px}
 let dados=[],filtradosBase=[];
 
 function normalizar(txt){
-return txt?.toString().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+  return txt?.toString().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 }
 
-Papa.parse("dados_concurso.csv",{download:true,header:true,skipEmptyLines:true,complete:r=>{
-dados=r.data;preencherCargos();
-}});
+Papa.parse("dados_concurso.csv",{
+  download:true,
+  header:true,
+  skipEmptyLines:true,
+  complete:r=>{
+    dados=r.data;
+    preencherCargos();
+  }
+});
 
 function preencherCargos(){
-[...new Set(dados.map(d=>d.CARGO).filter(Boolean))].sort()
-.forEach(v=>fCargo.add(new Option(v,v)));
+  [...new Set(dados.map(d=>d.CARGO).filter(Boolean))]
+  .sort().forEach(v=>fCargo.add(new Option(v,v)));
 }
 
 fCargo.onchange=()=>{
-fBloco.innerHTML='<option value="">BLOCO</option>';
-fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
-fBloco.disabled=fEspecialidade.disabled=btnVer.disabled=true;
-if(!fCargo.value)return;
-[...new Set(dados.filter(d=>d.CARGO===fCargo.value).map(d=>d.BLOCO).filter(Boolean))]
-.sort().forEach(v=>fBloco.add(new Option(v,v)));
-fBloco.disabled=false;
+  fBloco.innerHTML='<option value="">BLOCO</option>';
+  fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
+  fBloco.disabled=fEspecialidade.disabled=btnVer.disabled=true;
+  if(!fCargo.value)return;
+  [...new Set(dados.filter(d=>d.CARGO===fCargo.value).map(d=>d.BLOCO).filter(Boolean))]
+  .sort().forEach(v=>fBloco.add(new Option(v,v)));
+  fBloco.disabled=false;
 };
 
 fBloco.onchange=()=>{
-fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
-fEspecialidade.disabled=btnVer.disabled=true;
-if(!fBloco.value)return;
-[...new Set(dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value)
-.map(d=>d.ESPECIALIDADE).filter(Boolean))]
-.sort().forEach(v=>fEspecialidade.add(new Option(v,v)));
-fEspecialidade.disabled=false;
+  fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
+  fEspecialidade.disabled=btnVer.disabled=true;
+  if(!fBloco.value)return;
+  [...new Set(dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value)
+  .map(d=>d.ESPECIALIDADE).filter(Boolean))]
+  .sort().forEach(v=>fEspecialidade.add(new Option(v,v)));
+  fEspecialidade.disabled=false;
 };
 
 fEspecialidade.onchange=()=>{
-btnVer.disabled=!(fCargo.value&&fBloco.value&&fEspecialidade.value);
+  btnVer.disabled=!(fCargo.value&&fBloco.value&&fEspecialidade.value);
 };
 
 btnVer.onclick=()=>{
-document.getElementById("popupPix").style.display="flex";
+  document.getElementById("popupPix").style.display="flex";
 };
 
 function confirmarPopup(){
-if(typeof gtag==="function"){
-gtag('event','popup_ok',{event_category:'engajamento'});
-}
-document.getElementById("popupPix").style.display="none";
-filtradosBase=dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value&&d.ESPECIALIDADE===fEspecialidade.value);
-fNome.disabled=false;
-render(filtradosBase);
+  document.getElementById("popupPix").style.display="none";
+  filtradosBase=dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value&&d.ESPECIALIDADE===fEspecialidade.value);
+  fNome.disabled=false;
+  render(filtradosBase);
 }
 
 fNome.addEventListener("input",()=>{
-const termo=normalizar(fNome.value);
-render(filtradosBase.filter(d=>normalizar(d.NOME).includes(termo)));
+  const termo=normalizar(fNome.value);
+  render(filtradosBase.filter(d=>normalizar(d.NOME).includes(termo)));
 });
 
 function render(lista){
-if(!lista.length){tbody.innerHTML="";info.innerText="Nenhum resultado encontrado.";return;}
-const cols=Object.keys(lista[0]);
-thead.innerHTML="<tr>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr>";
-tbody.innerHTML=lista.map(l=>"<tr>"+cols.map(c=>`<td>${l[c]??""}</td>`).join("")+"</tr>").join("");
-info.innerText=`${lista.length} registros encontrados.`;
+  if(!lista.length){
+    tbody.innerHTML="";
+    info.innerText="Nenhum resultado encontrado.";
+    return;
+  }
+  const cols=Object.keys(lista[0]);
+  thead.innerHTML="<tr>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr>";
+  tbody.innerHTML=lista.map(l=>"<tr>"+cols.map(c=>`<td>${l[c]??""}</td>`).join("")+"</tr>").join("");
+  info.innerText=`${lista.length} registros encontrados.`;
 }
 
 function copiarPix(){
-navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
-alert("Chave Pix copiada!");
+  navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
+  alert("Chave Pix copiada!");
 }
 
 function copiarPixPopup(){
-navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
-if(typeof gtag==="function"){
-gtag('event','pix_copiado',{event_category:'doacao'});
+  navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
+  alert("Chave Pix copiada!");
 }
-alert("Chave Pix copiada!");
+
+async function exportarPDF(){
+  const { jsPDF } = window.jspdf;
+  const area = document.getElementById("areaPDF");
+
+  const canvas = await html2canvas(area,{scale:2,useCORS:true});
+  const imgData = canvas.toDataURL("image/png");
+
+  const pdf = new jsPDF("l","mm","a4"); // PAISAGEM
+  const largura = 297;
+  const altura = canvas.height * largura / canvas.width;
+
+  pdf.addImage(imgData,"PNG",0,10,largura,altura);
+  pdf.save("resultado_cnu2.pdf");
 }
 </script>
 
