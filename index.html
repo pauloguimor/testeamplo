@@ -182,7 +182,7 @@ function normalizar(txt){
   return txt?.toString().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 }
 
-/* ✅ CARREGAMENTO CORRIGIDO */
+/* CARREGAMENTO CSV */
 window.onload = function(){
   Papa.parse("dados_concurso.csv",{
     download:true,
@@ -273,12 +273,33 @@ function copiarPixPopup(){
   alert("Chave Pix copiada!");
 }
 
-/* PDF PAISAGEM */
+/* PDF – TABELA INTEIRA */
 async function exportarPDF(){
   const { jsPDF } = window.jspdf;
-  const area = document.getElementById("areaPDF");
 
-  const canvas = await html2canvas(area,{scale:2,useCORS:true});
+  const areaOriginal = document.getElementById("areaPDF");
+  const clone = areaOriginal.cloneNode(true);
+
+  const tabelaClone = clone.querySelector(".tabela-container");
+  if(tabelaClone){
+    tabelaClone.style.maxHeight = "none";
+    tabelaClone.style.overflow = "visible";
+  }
+
+  const tempDiv = document.createElement("div");
+  tempDiv.style.position = "fixed";
+  tempDiv.style.left = "-9999px";
+  tempDiv.appendChild(clone);
+  document.body.appendChild(tempDiv);
+
+  const canvas = await html2canvas(clone,{
+    scale:2,
+    windowWidth: clone.scrollWidth,
+    windowHeight: clone.scrollHeight
+  });
+
+  document.body.removeChild(tempDiv);
+
   const imgData = canvas.toDataURL("image/png");
 
   const pdf = new jsPDF("l","mm","a4");
