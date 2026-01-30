@@ -17,320 +17,201 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8}
 
 /* ===== HEADER ===== */
-header {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  background: #0b3c6d;
-  color: white;
-  padding: 8px 10px;
-  z-index: 1000;
-}
-
-header h3 {
-  margin: 4px 0 6px;
-  font-size: 16px;
-}
-
-header .linha {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-header select,
-header input,
-header button {
-  padding: 6px;
-  font-size: 13px;
-}
-
-header button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+header{position:fixed;top:0;width:100%;background:#0b3c6d;color:white;padding:8px 10px;z-index:1000}
+header h3{margin:4px 0 6px;font-size:16px}
+header .linha{display:flex;gap:6px;flex-wrap:wrap}
+header select,header input,header button{padding:6px;font-size:13px}
+header button:disabled{opacity:0.6;cursor:not-allowed}
 
 /* ===== MAIN ===== */
-main {
-  padding: 120px 10px 110px;
-}
-
-#info {
-  font-weight: bold;
-  margin-bottom: 6px;
-}
-
-.tabela-container {
-  max-height: 65vh;
-  overflow: auto;
-  background: white;
-}
+main{padding:120px 10px 110px}
+#info{font-weight:bold;margin-bottom:6px}
+.tabela-container{max-height:65vh;overflow:auto;background:white}
 
 /* ===== TABELA ===== */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-th {
-  position: sticky;
-  top: 0;
-  background: #e9ecef;
-}
-
-td, th {
-  border: 1px solid #ccc;
-  padding: 6px;
-}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;background:#e9ecef}
+td,th{border:1px solid #ccc;padding:6px}
 
 /* ===== FOOTER ===== */
-.footer-pix {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #0b3c6d;
-  color: white;
-  padding: 8px 14px;
-  box-sizing: border-box;
+.footer-pix{position:fixed;bottom:0;width:100%;background:#0b3c6d;color:white;padding:8px 14px;box-sizing:border-box}
+.footer-pix{display:flex;align-items:center;justify-content:center}
+.pix-info{text-align:center}
+.pix-info button{margin-top:4px;padding:6px 16px;background:#28a745;border:none;color:white;border-radius:6px;cursor:pointer;font-size:13px}
+
+/* QR */
+.qr-pix{position:absolute;right:14px;bottom:6px;text-align:center}
+.qr-pix img{width:110px;height:110px;background:white;padding:4px;border-radius:6px}
+.qr-texto{font-size:10px;margin-top:2px;opacity:0.9}
+
+/* MOBILE */
+@media (max-width:600px){
+.footer-pix{justify-content:space-between}
+.pix-info{font-size:11px;max-width:60%;text-align:left}
+.qr-pix{position:static;margin-left:auto}
+.qr-pix img{width:70px;height:70px}
+.qr-texto{font-size:9px}
 }
 
-.footer-pix {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* ===== POP-UP (NOVO) ===== */
+.popup-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:2000;
 }
-
-.pix-info {
-  text-align: center;
+.popup-content{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  max-width:360px;
+  width:90%;
+  text-align:center;
 }
-
-.pix-info button {
-  margin-top: 4px;
-  padding: 6px 16px;
-  background: #28a745;
-  border: none;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
+.popup-content button{
+  margin:8px 6px;
+  padding:8px 16px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
 }
-
-/* QR code desktop */
-.qr-pix {
-  position: absolute;
-  right: 14px;
-  bottom: 6px;
-  text-align: center;
-}
-
-.qr-pix img {
-  width: 110px;
-  height: 110px;
-  background: white;
-  padding: 4px;
-  border-radius: 6px;
-}
-
-.qr-texto {
-  font-size: 10px;
-  margin-top: 2px;
-  opacity: 0.9;
-}
-
-/* ===== MOBILE: LADO A LADO ===== */
-@media (max-width: 600px) {
-
-  .footer-pix {
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .pix-info {
-    text-align: left;
-    font-size: 11px;
-    max-width: 60%;
-  }
-
-  .pix-info button {
-    font-size: 12px;
-    padding: 6px 12px;
-  }
-
-  .qr-pix {
-    position: static;
-    margin-left: auto;
-  }
-
-  .qr-pix img {
-    width: 70px;
-    height: 70px;
-  }
-
-  .qr-texto {
-    font-size: 9px;
-  }
-}
+.btn-copy{background:#28a745;color:#fff}
+.btn-ok{background:#0b3c6d;color:#fff}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h3>RESULTADO PRELIMINAR CNU2 – EXTRAOFICIAL</h3>
-
-  <div class="linha">
-    <select id="fCargo">
-      <option value="">CARGO</option>
-    </select>
-
-    <select id="fBloco" disabled>
-      <option value="">BLOCO</option>
-    </select>
-
-    <select id="fEspecialidade" disabled>
-      <option value="">ESPECIALIDADE</option>
-    </select>
-
-    <button id="btnVer" disabled>Ver resultado</button>
-  </div>
-
-  <div class="linha">
-    <input id="fNome" placeholder="Buscar nome" disabled>
-  </div>
+<h3>RESULTADO PRELIMINAR CNU2 – EXTRAOFICIAL</h3>
+<div class="linha">
+<select id="fCargo"><option value="">CARGO</option></select>
+<select id="fBloco" disabled><option value="">BLOCO</option></select>
+<select id="fEspecialidade" disabled><option value="">ESPECIALIDADE</option></select>
+<button id="btnVer" disabled>Ver resultado</button>
+</div>
+<div class="linha">
+<input id="fNome" placeholder="Buscar nome" disabled>
+</div>
 </header>
 
 <main>
-  <div id="info"></div>
-
-  <div class="tabela-container">
-    <table>
-      <thead id="thead"></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+<div id="info"></div>
+<div class="tabela-container">
+<table>
+<thead id="thead"></thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
 </main>
 
 <footer class="footer-pix">
-  <div class="pix-info">
-    💙 Sua doação mantém o projeto ativo.<br>
-    <small>Qualquer valor faz diferença</small><br>
-    <button onclick="copiarPix()">Copiar Pix</button>
-  </div>
-
-  <div class="qr-pix">
-    <img src="qr-pix.png" alt="QR Code Pix">
-    <div class="qr-texto">Escaneie para doar via Pix</div>
-  </div>
+<div class="pix-info">
+💙 Este site foi criado de forma independente para ajudar candidatos.<br>
+<small>Se ele te ajudou, considere apoiar.</small><br>
+<button onclick="copiarPix()">Copiar Pix</button>
+</div>
+<div class="qr-pix">
+<img src="qr-pix.png">
+<div class="qr-texto">Escaneie para doar via Pix</div>
+</div>
 </footer>
 
+<!-- POP-UP -->
+<div id="popupPix" class="popup-overlay">
+<div class="popup-content">
+<p><strong>Se este site te ajudou, considere fazer uma contribuição.</strong></p>
+<p><small>Qualquer valor faz diferença 💙</small></p>
+<button class="btn-copy" onclick="copiarPixPopup()">Copiar Pix</button>
+<button class="btn-ok" onclick="confirmarPopup()">OK</button>
+</div>
+</div>
+
 <script>
-let dados = [];
-let filtradosBase = [];
+let dados=[],filtradosBase=[];
 
-function normalizar(txt) {
-  return txt?.toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+function normalizar(txt){
+return txt?.toString().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 }
 
-Papa.parse("dados_concurso.csv", {
-  download: true,
-  header: true,
-  skipEmptyLines: true,
-  complete: r => {
-    dados = r.data;
-    preencherCargos();
-  }
+Papa.parse("dados_concurso.csv",{download:true,header:true,skipEmptyLines:true,complete:r=>{
+dados=r.data;preencherCargos();
+}});
+
+function preencherCargos(){
+[...new Set(dados.map(d=>d.CARGO).filter(Boolean))].sort()
+.forEach(v=>fCargo.add(new Option(v,v)));
+}
+
+fCargo.onchange=()=>{
+fBloco.innerHTML='<option value="">BLOCO</option>';
+fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
+fBloco.disabled=fEspecialidade.disabled=btnVer.disabled=true;
+if(!fCargo.value)return;
+[...new Set(dados.filter(d=>d.CARGO===fCargo.value).map(d=>d.BLOCO).filter(Boolean))]
+.sort().forEach(v=>fBloco.add(new Option(v,v)));
+fBloco.disabled=false;
+};
+
+fBloco.onchange=()=>{
+fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
+fEspecialidade.disabled=btnVer.disabled=true;
+if(!fBloco.value)return;
+[...new Set(dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value)
+.map(d=>d.ESPECIALIDADE).filter(Boolean))]
+.sort().forEach(v=>fEspecialidade.add(new Option(v,v)));
+fEspecialidade.disabled=false;
+};
+
+fEspecialidade.onchange=()=>{
+btnVer.disabled=!(fCargo.value&&fBloco.value&&fEspecialidade.value);
+};
+
+btnVer.onclick=()=>{
+document.getElementById("popupPix").style.display="flex";
+};
+
+function confirmarPopup(){
+if(typeof gtag==="function"){
+gtag('event','popup_ok',{event_category:'engajamento'});
+}
+document.getElementById("popupPix").style.display="none";
+filtradosBase=dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value&&d.ESPECIALIDADE===fEspecialidade.value);
+fNome.disabled=false;
+render(filtradosBase);
+}
+
+fNome.addEventListener("input",()=>{
+const termo=normalizar(fNome.value);
+render(filtradosBase.filter(d=>normalizar(d.NOME).includes(termo)));
 });
 
-function preencherCargos() {
-  const sel = fCargo;
-  [...new Set(dados.map(d => d.CARGO).filter(Boolean))]
-    .sort()
-    .forEach(v => sel.add(new Option(v, v)));
+function render(lista){
+if(!lista.length){tbody.innerHTML="";info.innerText="Nenhum resultado encontrado.";return;}
+const cols=Object.keys(lista[0]);
+thead.innerHTML="<tr>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr>";
+tbody.innerHTML=lista.map(l=>"<tr>"+cols.map(c=>`<td>${l[c]??""}</td>`).join("")+"</tr>").join("");
+info.innerText=`${lista.length} registros encontrados.`;
 }
 
-fCargo.onchange = () => {
-  fBloco.innerHTML = '<option value="">BLOCO</option>';
-  fEspecialidade.innerHTML = '<option value="">ESPECIALIDADE</option>';
-  fBloco.disabled = true;
-  fEspecialidade.disabled = true;
-  btnVer.disabled = true;
-
-  if (!fCargo.value) return;
-
-  [...new Set(dados.filter(d => d.CARGO === fCargo.value).map(d => d.BLOCO).filter(Boolean))]
-    .sort()
-    .forEach(v => fBloco.add(new Option(v, v)));
-
-  fBloco.disabled = false;
-};
-
-fBloco.onchange = () => {
-  fEspecialidade.innerHTML = '<option value="">ESPECIALIDADE</option>';
-  fEspecialidade.disabled = true;
-  btnVer.disabled = true;
-
-  if (!fBloco.value) return;
-
-  [...new Set(dados.filter(d =>
-    d.CARGO === fCargo.value && d.BLOCO === fBloco.value
-  ).map(d => d.ESPECIALIDADE).filter(Boolean))]
-    .sort()
-    .forEach(v => fEspecialidade.add(new Option(v, v)));
-
-  fEspecialidade.disabled = false;
-};
-
-fEspecialidade.onchange = () => {
-  btnVer.disabled = !(fCargo.value && fBloco.value && fEspecialidade.value);
-};
-
-btnVer.onclick = () => {
-  filtradosBase = dados.filter(d =>
-    d.CARGO === fCargo.value &&
-    d.BLOCO === fBloco.value &&
-    d.ESPECIALIDADE === fEspecialidade.value
-  );
-
-  fNome.disabled = false;
-  render(filtradosBase);
-};
-
-fNome.addEventListener("input", () => {
-  const termo = normalizar(fNome.value);
-  render(filtradosBase.filter(d => normalizar(d.NOME).includes(termo)));
-});
-
-function render(lista) {
-  if (!lista.length) {
-    tbody.innerHTML = "";
-    info.innerText = "Nenhum resultado encontrado.";
-    return;
-  }
-
-  const cols = Object.keys(lista[0]);
-  thead.innerHTML = "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
-
-  tbody.innerHTML = lista.map(l =>
-    "<tr>" + cols.map(c => `<td>${l[c] ?? ""}</td>`).join("") + "</tr>"
-  ).join("");
-
-  info.innerText = `${lista.length} registros encontrados.`;
+function copiarPix(){
+navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
+alert("Chave Pix copiada!");
 }
 
-function copiarPix() {
-  navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
-  alert("Chave Pix copiada!");
+function copiarPixPopup(){
+navigator.clipboard.writeText("68f58fac-9cee-4a2e-a636-cccca267d3b9");
+if(typeof gtag==="function"){
+gtag('event','pix_copiado',{event_category:'doacao'});
+}
+alert("Chave Pix copiada!");
 }
 </script>
 
