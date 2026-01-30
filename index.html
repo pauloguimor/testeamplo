@@ -8,10 +8,10 @@
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-L04YT2TFYP"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-L04YT2TFYP');
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-L04YT2TFYP');
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -175,64 +175,79 @@ Copiar Pix
 </div>
 
 <script>
-let dados=[],filtradosBase=[];
+let dados = [];
+let filtradosBase = [];
 
 function normalizar(txt){
   return txt?.toString().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 }
 
-Papa.parse("dados_concurso.csv",{
-  download:true,
-  header:true,
-  skipEmptyLines:true,
-  complete:r=>{
-    dados=r.data;
-    preencherCargos();
-  }
-});
+/* ✅ CARREGAMENTO CORRIGIDO */
+window.onload = function(){
+  Papa.parse("dados_concurso.csv",{
+    download:true,
+    header:true,
+    skipEmptyLines:true,
+    complete:function(r){
+      dados = r.data;
+      preencherCargos();
+    }
+  });
+};
 
 function preencherCargos(){
   [...new Set(dados.map(d=>d.CARGO).filter(Boolean))]
-  .sort().forEach(v=>fCargo.add(new Option(v,v)));
+    .sort()
+    .forEach(v=>fCargo.add(new Option(v,v)));
 }
 
-fCargo.onchange=()=>{
+fCargo.onchange = ()=>{
   fBloco.innerHTML='<option value="">BLOCO</option>';
   fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
-  fBloco.disabled=fEspecialidade.disabled=btnVer.disabled=true;
-  if(!fCargo.value)return;
+  fBloco.disabled = fEspecialidade.disabled = btnVer.disabled = true;
+  if(!fCargo.value) return;
+
   [...new Set(dados.filter(d=>d.CARGO===fCargo.value).map(d=>d.BLOCO).filter(Boolean))]
-  .sort().forEach(v=>fBloco.add(new Option(v,v)));
-  fBloco.disabled=false;
+    .sort()
+    .forEach(v=>fBloco.add(new Option(v,v)));
+
+  fBloco.disabled = false;
 };
 
-fBloco.onchange=()=>{
+fBloco.onchange = ()=>{
   fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
-  fEspecialidade.disabled=btnVer.disabled=true;
-  if(!fBloco.value)return;
-  [...new Set(dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value)
-  .map(d=>d.ESPECIALIDADE).filter(Boolean))]
-  .sort().forEach(v=>fEspecialidade.add(new Option(v,v)));
-  fEspecialidade.disabled=false;
+  fEspecialidade.disabled = btnVer.disabled = true;
+  if(!fBloco.value) return;
+
+  [...new Set(dados.filter(d=>d.CARGO===fCargo.value && d.BLOCO===fBloco.value)
+    .map(d=>d.ESPECIALIDADE).filter(Boolean))]
+    .sort()
+    .forEach(v=>fEspecialidade.add(new Option(v,v)));
+
+  fEspecialidade.disabled = false;
 };
 
-fEspecialidade.onchange=()=>{
-  btnVer.disabled=!(fCargo.value&&fBloco.value&&fEspecialidade.value);
+fEspecialidade.onchange = ()=>{
+  btnVer.disabled = !(fCargo.value && fBloco.value && fEspecialidade.value);
 };
 
-btnVer.onclick=()=>{
+btnVer.onclick = ()=>{
   document.getElementById("popupPix").style.display="flex";
 };
 
 function confirmarPopup(){
   document.getElementById("popupPix").style.display="none";
-  filtradosBase=dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value&&d.ESPECIALIDADE===fEspecialidade.value);
-  fNome.disabled=false;
+  filtradosBase = dados.filter(d =>
+    d.CARGO===fCargo.value &&
+    d.BLOCO===fBloco.value &&
+    d.ESPECIALIDADE===fEspecialidade.value
+  );
+  fNome.disabled = false;
   render(filtradosBase);
 }
 
 fNome.addEventListener("input",()=>{
-  const termo=normalizar(fNome.value);
+  const termo = normalizar(fNome.value);
   render(filtradosBase.filter(d=>normalizar(d.NOME).includes(termo)));
 });
 
@@ -242,10 +257,10 @@ function render(lista){
     info.innerText="Nenhum resultado encontrado.";
     return;
   }
-  const cols=Object.keys(lista[0]);
-  thead.innerHTML="<tr>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr>";
-  tbody.innerHTML=lista.map(l=>"<tr>"+cols.map(c=>`<td>${l[c]??""}</td>`).join("")+"</tr>").join("");
-  info.innerText=`${lista.length} registros encontrados.`;
+  const cols = Object.keys(lista[0]);
+  thead.innerHTML = "<tr>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr>";
+  tbody.innerHTML = lista.map(l=>"<tr>"+cols.map(c=>`<td>${l[c]??""}</td>`).join("")+"</tr>").join("");
+  info.innerText = `${lista.length} registros encontrados.`;
 }
 
 function copiarPix(){
@@ -258,6 +273,7 @@ function copiarPixPopup(){
   alert("Chave Pix copiada!");
 }
 
+/* PDF PAISAGEM */
 async function exportarPDF(){
   const { jsPDF } = window.jspdf;
   const area = document.getElementById("areaPDF");
@@ -265,7 +281,7 @@ async function exportarPDF(){
   const canvas = await html2canvas(area,{scale:2,useCORS:true});
   const imgData = canvas.toDataURL("image/png");
 
-  const pdf = new jsPDF("l","mm","a4"); // PAISAGEM
+  const pdf = new jsPDF("l","mm","a4");
   const largura = 297;
   const altura = canvas.height * largura / canvas.width;
 
