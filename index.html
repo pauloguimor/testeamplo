@@ -33,7 +33,7 @@ header button:disabled{opacity:0.6;cursor:not-allowed}
 #btnCsv { background-color: #198754; color: white; border: none; border-radius: 4px; }
 
 /* ===== MAIN ===== */
-main{padding:130px 10px 110px} /* Aumentei um pouco o padding top por causa dos novos botões */
+main{padding:130px 10px 110px}
 #info{font-weight:bold;margin-bottom:6px}
 .tabela-container{max-height:65vh;overflow:auto;background:white}
 
@@ -161,7 +161,6 @@ fCargo.onchange=()=>{
 fBloco.innerHTML='<option value="">BLOCO</option>';
 fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
 fBloco.disabled=fEspecialidade.disabled=btnVer.disabled=true;
-// Desabilita botões de exportação se mudar o filtro
 document.getElementById('btnPdf').disabled = true;
 document.getElementById('btnCsv').disabled = true;
 
@@ -197,7 +196,6 @@ document.getElementById("popupPix").style.display="none";
 filtradosBase=dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value&&d.ESPECIALIDADE===fEspecialidade.value);
 fNome.disabled=false;
 
-// Habilita os botões de exportação
 document.getElementById('btnPdf').disabled = false;
 document.getElementById('btnCsv').disabled = false;
 
@@ -231,21 +229,13 @@ alert("Chave Pix copiada!");
 }
 
 // ==========================================
-// FUNÇÕES DE EXPORTAÇÃO (ADICIONADAS)
+// EXPORTAR PDF COM RODAPÉ EM TODAS AS PÁGINAS
 // ==========================================
-
-// EXPORTAR PDF
 document.getElementById('btnPdf').onclick = () => {
     if (!filtradosBase || filtradosBase.length === 0) return;
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem
-
-    // Título
-    doc.setFontSize(12);
-    doc.text(`Cargo: ${fCargo.value}`, 14, 10);
-    doc.setFontSize(10);
-    doc.text(`Bloco: ${fBloco.value} | Especialidade: ${fEspecialidade.value}`, 14, 16);
 
     const colunas = Object.keys(filtradosBase[0]);
     const linhas = filtradosBase.map(item => colunas.map(col => item[col] || ""));
@@ -253,30 +243,51 @@ document.getElementById('btnPdf').onclick = () => {
     doc.autoTable({
         head: [colunas],
         body: linhas,
-        startY: 20,
+        startY: 22, 
         theme: 'grid',
-        styles: { fontSize: 7, cellPadding: 1 }, // Fonte pequena para caber tudo
-        headStyles: { fillColor: [11, 60, 109] } // Cor #0b3c6d do site
+        styles: { fontSize: 7, cellPadding: 1 },
+        headStyles: { fillColor: [11, 60, 109] },
+        // A mágica acontece aqui: didDrawPage roda a cada página gerada
+        didDrawPage: function (data) {
+            // CABEÇALHO (Repete em todas as páginas)
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Cargo: ${fCargo.value}`, 14, 10);
+            doc.setFontSize(10);
+            doc.text(`Bloco: ${fBloco.value} | Especialidade: ${fEspecialidade.value}`, 14, 16);
+
+            // RODAPÉ (Repete em todas as páginas)
+            const pageSize = doc.internal.pageSize;
+            const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+            const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+            
+            doc.setFontSize(8);
+            doc.setTextColor(100); // Cinza
+            
+            // Texto do rodapé
+            const textoRodape = "Projeto independente. Se foi útil, apoie via Pix: 68f58fac-9cee-4a2e-a636-cccca267d3b9";
+            
+            // Centraliza o texto no rodapé
+            doc.text(textoRodape, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        }
     });
 
     doc.save(`Resultado_${fCargo.value}.pdf`);
 };
 
-// EXPORTAR EXCEL (CSV)
+// EXPORTAR EXCEL
 document.getElementById('btnCsv').onclick = () => {
     if (!filtradosBase || filtradosBase.length === 0) return;
 
-    // Usa PapaParse para converter JSON de volta para CSV
     const csv = Papa.unparse(filtradosBase, {
-        delimiter: ";", // Ponto e vírgula para Excel no Brasil
+        delimiter: ";",
         header: true
     });
 
-    // Adiciona BOM (\ufeff) para o Excel reconhecer acentos UTF-8
     const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     
-    if (navigator.msSaveBlob) { // IE 10+
+    if (navigator.msSaveBlob) {
         navigator.msSaveBlob(blob, "resultado.csv");
     } else {
         link.href = URL.createObjectURL(blob);
