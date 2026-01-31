@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Resultado Preliminar CNU2 – Extraoficial</title>
 
-<!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-L04YT2TFYP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -16,18 +15,25 @@
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8}
 
 /* ===== HEADER ===== */
 header{position:fixed;top:0;width:100%;background:#0b3c6d;color:white;padding:8px 10px;z-index:1000}
 header h3{margin:4px 0 6px;font-size:16px}
-header .linha{display:flex;gap:6px;flex-wrap:wrap}
+header .linha{display:flex;gap:6px;flex-wrap:wrap; align-items: center;}
 header select,header input,header button{padding:6px;font-size:13px}
 header button:disabled{opacity:0.6;cursor:not-allowed}
 
+/* Estilo específico para os botões de exportação */
+#btnPdf { background-color: #dc3545; color: white; border: none; border-radius: 4px; }
+#btnCsv { background-color: #198754; color: white; border: none; border-radius: 4px; }
+
 /* ===== MAIN ===== */
-main{padding:120px 10px 110px}
+main{padding:130px 10px 110px} /* Aumentei um pouco o padding top por causa dos novos botões */
 #info{font-weight:bold;margin-bottom:6px}
 .tabela-container{max-height:65vh;overflow:auto;background:white}
 
@@ -97,8 +103,10 @@ td,th{border:1px solid #ccc;padding:6px}
 <select id="fEspecialidade" disabled><option value="">ESPECIALIDADE</option></select>
 <button id="btnVer" disabled>Ver resultado</button>
 </div>
-<div class="linha">
+<div class="linha" style="margin-top: 5px;">
 <input id="fNome" placeholder="Buscar nome" disabled>
+<button id="btnPdf" disabled>Baixar PDF</button>
+<button id="btnCsv" disabled>Baixar Excel</button>
 </div>
 </header>
 
@@ -124,7 +132,6 @@ td,th{border:1px solid #ccc;padding:6px}
 </div>
 </footer>
 
-<!-- POP-UP -->
 <div id="popupPix" class="popup-overlay">
 <div class="popup-content">
 <p><strong>Este site é mantido de forma independente.</strong></p>
@@ -154,6 +161,10 @@ fCargo.onchange=()=>{
 fBloco.innerHTML='<option value="">BLOCO</option>';
 fEspecialidade.innerHTML='<option value="">ESPECIALIDADE</option>';
 fBloco.disabled=fEspecialidade.disabled=btnVer.disabled=true;
+// Desabilita botões de exportação se mudar o filtro
+document.getElementById('btnPdf').disabled = true;
+document.getElementById('btnCsv').disabled = true;
+
 if(!fCargo.value)return;
 [...new Set(dados.filter(d=>d.CARGO===fCargo.value).map(d=>d.BLOCO).filter(Boolean))]
 .sort().forEach(v=>fBloco.add(new Option(v,v)));
@@ -185,6 +196,11 @@ gtag('event','popup_ok',{event_category:'engajamento'});
 document.getElementById("popupPix").style.display="none";
 filtradosBase=dados.filter(d=>d.CARGO===fCargo.value&&d.BLOCO===fBloco.value&&d.ESPECIALIDADE===fEspecialidade.value);
 fNome.disabled=false;
+
+// Habilita os botões de exportação
+document.getElementById('btnPdf').disabled = false;
+document.getElementById('btnCsv').disabled = false;
+
 render(filtradosBase);
 }
 
@@ -213,6 +229,64 @@ gtag('event','pix_copiado',{event_category:'doacao'});
 }
 alert("Chave Pix copiada!");
 }
+
+// ==========================================
+// FUNÇÕES DE EXPORTAÇÃO (ADICIONADAS)
+// ==========================================
+
+// EXPORTAR PDF
+document.getElementById('btnPdf').onclick = () => {
+    if (!filtradosBase || filtradosBase.length === 0) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem
+
+    // Título
+    doc.setFontSize(12);
+    doc.text(`Cargo: ${fCargo.value}`, 14, 10);
+    doc.setFontSize(10);
+    doc.text(`Bloco: ${fBloco.value} | Especialidade: ${fEspecialidade.value}`, 14, 16);
+
+    const colunas = Object.keys(filtradosBase[0]);
+    const linhas = filtradosBase.map(item => colunas.map(col => item[col] || ""));
+
+    doc.autoTable({
+        head: [colunas],
+        body: linhas,
+        startY: 20,
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 1 }, // Fonte pequena para caber tudo
+        headStyles: { fillColor: [11, 60, 109] } // Cor #0b3c6d do site
+    });
+
+    doc.save(`Resultado_${fCargo.value}.pdf`);
+};
+
+// EXPORTAR EXCEL (CSV)
+document.getElementById('btnCsv').onclick = () => {
+    if (!filtradosBase || filtradosBase.length === 0) return;
+
+    // Usa PapaParse para converter JSON de volta para CSV
+    const csv = Papa.unparse(filtradosBase, {
+        delimiter: ";", // Ponto e vírgula para Excel no Brasil
+        header: true
+    });
+
+    // Adiciona BOM (\ufeff) para o Excel reconhecer acentos UTF-8
+    const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, "resultado.csv");
+    } else {
+        link.href = URL.createObjectURL(blob);
+        link.download = `Resultado_${fCargo.value}.csv`;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
 </script>
 
 </body>
